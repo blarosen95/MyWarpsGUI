@@ -1,0 +1,13 @@
+name: MyWarpsGUI
+version: ${project.version}
+main: com.github.blarosen95.mywarpsgui.MyWarpsGUI
+depend: [Essentials, Vault]
+authors: [The_Dale_Gribble]
+description: A GUI (re-)implementation of Acorn's MyWarps Plugin
+api-version: 1.13
+
+commands:
+  mywarpsgui_test:
+    usage: /<command>
+  mywarpsgui:
+    usage: /<command>
