@@ -13,6 +13,7 @@ public class ListPagesGUI {
 
 // TODO: 10/5/2018 MAJOR: THIS NEEDS TO LINK EACH PAGE TOGETHER INTO SOME FORMAT THAT BUKKIT CAN ACTUALLY USE.
 
-        player.openInventory()
+//        player.openInventory();
+        return true;
     }
 }
