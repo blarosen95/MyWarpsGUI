@@ -21,6 +21,8 @@ public final class MyWarpsGUI extends JavaPlugin {
     private static SQLiteDatabase sqLiteDatabase;
     private static UUIDToName uuidToName;
 
+    private MainGUI mainGUI;
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -29,7 +31,9 @@ public final class MyWarpsGUI extends JavaPlugin {
         sqLiteDatabase = new SQLiteDatabase();
         uuidToName = new UUIDToName();
 
-        getServer().getPluginManager().registerEvents(new GUIListener(this), this);
+        mainGUI = new MainGUI();
+
+        getServer().getPluginManager().registerEvents(new GUIListener(), this);
     }
 
     @Override
@@ -46,7 +50,7 @@ public final class MyWarpsGUI extends JavaPlugin {
                 e.printStackTrace();
             }
         } else if (cmd.getName().equalsIgnoreCase("mywarpsgui")) {
-            boolean success = MainGUI.openGUI((Player) cs);
+            boolean success = mainGUI.openGUI((Player) cs);
         }
         return true;
     }

@@ -21,7 +21,9 @@ public class WarpListItem {
         meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + warp.getName() + ChatColor.RESET); // TODO: 10/5/2018 Is RESET necessary? Let's check after it works.
 
         ArrayList<String> lore = new ArrayList<>();
+        // TODO: 10/6/2018 the following json query is fairly slow. I'd rather do this only during both our initial warps.yml parsing and then upon creating new Warp Objects (as an attribute).
         lore.add(MyWarpsGUI.getUuidToName().getName(warp.getCreatorUUID())); //Warp's Creator (by username)
+
         meta.setLore(lore);
 
         //Hide vanilla tooltip

@@ -128,13 +128,16 @@ public class SQLiteDatabase {
      *            5: Other
      * @return a ResultSet containing the results of the query.
      */
-    public ResultSet getWarpsInCategory(int cat) throws SQLException {
+    public ResultSet getWarpsInCategory(int cat) throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+        if (cat == 1) {
+            Statement queryAll = con.createStatement();
+            return queryAll.executeQuery("SELECT * FROM warps;");
+        }
         PreparedStatement prepQuery = con.prepareStatement("SELECT * FROM warps WHERE warp_category=?");
-
         switch (cat) {
-            case 1:
-                PreparedStatement queryAll = con.prepareStatement("SELECT * FROM warps");
-                return queryAll.executeQuery();
             case 2:
                 prepQuery.setString(1, "Town");
                 return prepQuery.executeQuery();

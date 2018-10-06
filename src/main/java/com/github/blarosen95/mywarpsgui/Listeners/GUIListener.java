@@ -2,10 +2,14 @@ package com.github.blarosen95.mywarpsgui.Listeners;
 
 import com.github.blarosen95.mywarpsgui.Data.SQLiteDatabase;
 import com.github.blarosen95.mywarpsgui.Data.Warp;
+import com.github.blarosen95.mywarpsgui.GUI.ListPage;
+import com.github.blarosen95.mywarpsgui.GUI.ListPagesGUI;
+import com.github.blarosen95.mywarpsgui.GUI.MainGUI;
 import com.github.blarosen95.mywarpsgui.GUI.WarpListGUI;
 import com.github.blarosen95.mywarpsgui.Items.WarpListItem;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.ListItemPagination;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,7 +28,14 @@ public class GUIListener implements Listener {
     public SQLiteDatabase db = MyWarpsGUI.getSqLiteDatabase();
     public WarpListItem warpListItem = new WarpListItem();
 
-    public GUIListener(MyWarpsGUI plugin) {
+    public ListPage listPage = new ListPage();
+
+    public ListPagesGUI listPagesGUI = new ListPagesGUI();
+    public MainGUI mainGUI = new MainGUI();
+
+    public ArrayList<Inventory> pagesList = new ArrayList<>();
+
+    public GUIListener() {
     }
 
     private ArrayList<Warp> convertResultSet(ResultSet resultSet) throws SQLException {
@@ -37,7 +48,7 @@ public class GUIListener implements Listener {
             String warpCategory = resultSet.getString(3);
             String warpUUID = resultSet.getString(4);
             String fileName = resultSet.getString(5);
-            Warp currentWarp = new Warp(warpName, warpCategory, warpUUID, fileName);
+            Warp currentWarp = new Warp(warpName, warpUUID, warpCategory, fileName);
             warps.add(currentWarp);
         }
         return warps;
@@ -55,7 +66,7 @@ public class GUIListener implements Listener {
 
             if (clickedType == Material.WRITTEN_BOOK) {
                 // TODO: 10/5/2018 This will open our WarpListGUI menu.
-                WarpListGUI.openGUI((Player) event.getWhoClicked());
+                WarpListGUI.openGUI((Player) event.getWhoClicked()); // TODO: 10/6/2018 Why bother with the casting? We could use the Player player variable instead.
             } else if (clickedType == Material.END_PORTAL_FRAME) {
                 // TODO: 10/5/2018 This will open our WarpCreateGUI menu.
                 player.sendMessage("This will open WarpCreateGUI");
@@ -82,15 +93,17 @@ public class GUIListener implements Listener {
                     // TODO: 10/5/2018 Process Warp ArrayList here for displaying on the menu.
                     // TODO: 10/5/2018 The new menu to display will need a dynamic size (as in the number of slots should be determined on the fly) so that:
                     // TODO: 10/5/2018 Each Warp gets placed in a slot of the menu (with a custom tooltip generated on the fly too) with enough slots to take all warps in the list...
-                        //This will sometimes require making the last (and subsequently the first) slot have a next-page button (subsequently a previous-page button)
-                            //This will be simple using basic math such as Modulus
-
+                    //This will sometimes require making the last (and subsequently the first) slot have a next-page button (subsequently a previous-page button)
+                    //This will be simple using basic math such as Modulus
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination);
+                    this.pagesList = listPage.getListPagesList();
 
                     // TODO: 10/5/2018 The following is to determine whether or not the list fits on one page and then to call the appropriate menus.
                     if (listItemPagination.isNeedsPagination()) {
-                        // TODO: 10/5/2018 Create the appropriate menu.
+                        listPagesGUI.openGUI(player, pagesList);
+
 
                         // TODO: 10/5/2018 And then:
                         if (listItemPagination.isNeedsExtraPage()) {
@@ -98,6 +111,7 @@ public class GUIListener implements Listener {
                         }
 
                     } else {
+                        listPagesGUI.openGUI(player, pagesList);
                         // TODO: 10/5/2018 Create the appropriate single-page menu.
                     }
 
@@ -122,10 +136,31 @@ public class GUIListener implements Listener {
                     resultSet = db.getWarpsInCategory(5);
                     warps = convertResultSet(resultSet);
 
+                } else if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA) {
+                    // TODO: 10/6/2018 This will go back to parent menu (main menu in this case).
+                    mainGUI.openGUI(player);
                 }
-            } catch (SQLException e) {
+            } catch (SQLException | ClassNotFoundException e) {
                 // TODO: 10/5/2018 Use an ErrorLogger to supplement this thrown message.
                 e.printStackTrace();
+            }
+        } else if (inventory.getName().equals("List Page") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
+                // TODO: 10/6/2018 Go to parent menu (in this case, parent is "Warp List GUI" menu)
+                WarpListGUI.openGUI(player);
+            } else if (clickedType == Material.BARRIER) {
+                // TODO: 10/6/2018 Go back one page.
+                if (inventory.getItem(0).getAmount() == 1) {
+                    listPagesGUI.openGUI(player, pagesList, inventory.getItem(0).getAmount() - 1);
+                } else {
+                    listPagesGUI.openGUI(player, pagesList, inventory.getItem(0).getAmount() - 2);
+                }
+            } else if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "" + "→" + ChatColor.RESET)) {
+                // TODO: 10/6/2018 Go to next page (page to open is the amount value for clicked).
+                listPagesGUI.openGUI(player, pagesList, inventory.getItem(inventory.getSize() - 1).getAmount());
             }
         }
         //If it's not our main menu:
