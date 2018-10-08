@@ -1,10 +1,12 @@
 package com.github.blarosen95.mywarpsgui.GUI;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 // TODO: 10/5/2018 Let's refactor to use AnvilGUI (eventually)
@@ -20,6 +22,9 @@ public class MainGUI {
         ItemMeta listMeta = listButton.getItemMeta();
         listMeta.setDisplayName("List Warps");
         listButton.setItemMeta(listMeta);
+        BookMeta listBookMeta = (BookMeta) listButton.getItemMeta();
+        listBookMeta.setAuthor(ChatColor.AQUA + "The_Dale_Gribble" + ChatColor.RESET);
+        listButton.setItemMeta(listBookMeta);
 
         ItemStack createButton = new ItemStack(Material.END_PORTAL_FRAME, 1);
         ItemMeta createMeta = createButton.getItemMeta();

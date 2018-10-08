@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class WarpListItem {
 
 
-    public ItemStack makeListItem(Warp warp) {
+    public ItemStack makeListItem(Warp warp, boolean showCat) {
         ItemStack item = new ItemStack(Material.SIGN, 1);
 
         //Create item ItemMeta
@@ -21,8 +21,11 @@ public class WarpListItem {
         meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + warp.getName() + ChatColor.RESET); // TODO: 10/5/2018 Is RESET necessary? Let's check after it works.
 
         ArrayList<String> lore = new ArrayList<>();
-        // TODO: 10/6/2018 the following json query is fairly slow. I'd rather do this only during both our initial warps.yml parsing and then upon creating new Warp Objects (as an attribute).
-        lore.add(MyWarpsGUI.getUuidToName().getName(warp.getCreatorUUID())); //Warp's Creator (by username)
+        lore.add(warp.getCreatorName());
+
+        if (showCat) {
+            lore.add(ChatColor.WHITE + "" + warp.getCategory() + ChatColor.RESET);
+        }
 
         meta.setLore(lore);
 

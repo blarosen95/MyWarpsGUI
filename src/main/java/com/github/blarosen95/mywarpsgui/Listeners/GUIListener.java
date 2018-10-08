@@ -47,8 +47,9 @@ public class GUIListener implements Listener {
             String warpName = resultSet.getString(2);
             String warpCategory = resultSet.getString(3);
             String warpUUID = resultSet.getString(4);
-            String fileName = resultSet.getString(5);
-            Warp currentWarp = new Warp(warpName, warpUUID, warpCategory, fileName);
+            String warpCreator = resultSet.getString(5);
+            String fileName = resultSet.getString(6);
+            Warp currentWarp = new Warp(warpName, warpUUID, warpCreator, warpCategory, fileName);
             warps.add(currentWarp);
         }
         return warps;
@@ -87,15 +88,10 @@ public class GUIListener implements Listener {
 
             try {
                 if (clickedType == Material.DRAGON_HEAD) {
-                    // TODO: 10/5/2018 This will list all warps
                     resultSet = db.getWarpsInCategory(1);
                     warps = convertResultSet(resultSet);
-                    // TODO: 10/5/2018 Process Warp ArrayList here for displaying on the menu.
-                    // TODO: 10/5/2018 The new menu to display will need a dynamic size (as in the number of slots should be determined on the fly) so that:
-                    // TODO: 10/5/2018 Each Warp gets placed in a slot of the menu (with a custom tooltip generated on the fly too) with enough slots to take all warps in the list...
-                    //This will sometimes require making the last (and subsequently the first) slot have a next-page button (subsequently a previous-page button)
-                    //This will be simple using basic math such as Modulus
-                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp)).collect(Collectors.toCollection(ArrayList::new));
+
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, true)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
                     listPage.createPages(warpItems, listItemPagination);
                     this.pagesList = listPage.getListPagesList();
@@ -105,6 +101,7 @@ public class GUIListener implements Listener {
                         listPagesGUI.openGUI(player, pagesList);
 
 
+                        // TODO: 10/8/2018 Pretty sure there's no longer a need to check for this if statement (and also probably no need for the statement this one is in, nor the following else statement
                         // TODO: 10/5/2018 And then:
                         if (listItemPagination.isNeedsExtraPage()) {
                             // TODO: 10/5/2018 create that final page
@@ -117,27 +114,55 @@ public class GUIListener implements Listener {
 
 
                 } else if (clickedType == Material.SIGN) {
-                    // TODO: 10/5/2018 This will list Town warps
+                    // This will list Town warps.
                     resultSet = db.getWarpsInCategory(2);
                     warps = convertResultSet(resultSet);
 
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
+                    ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination);
+                    this.pagesList = listPage.getListPagesList();
+
+                    listPagesGUI.openGUI(player, pagesList);
+
                 } else if (clickedType == Material.WHEAT) {
-                    // TODO: 10/5/2018 This will list Farm warps
+                    // This will list Farm warps.
                     resultSet = db.getWarpsInCategory(3);
                     warps = convertResultSet(resultSet);
 
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
+                    ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination);
+                    this.pagesList = listPage.getListPagesList();
+
+                    listPagesGUI.openGUI(player, pagesList);
+
                 } else if (clickedType == Material.CHEST) {
-                    // TODO: 10/5/2018 This will list Shop warps
+                    // This will list Shop warps.
                     resultSet = db.getWarpsInCategory(4);
                     warps = convertResultSet(resultSet);
 
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
+                    ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination);
+                    this.pagesList = listPage.getListPagesList();
+
+                    listPagesGUI.openGUI(player, pagesList);
+
                 } else if (clickedType == Material.COOKIE) {
-                    // TODO: 10/5/2018 This will list Other warps
+                    // This will list Other warps.
                     resultSet = db.getWarpsInCategory(5);
                     warps = convertResultSet(resultSet);
 
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
+                    ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination);
+                    this.pagesList = listPage.getListPagesList();
+
+                    listPagesGUI.openGUI(player, pagesList);
+
                 } else if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA) {
-                    // TODO: 10/6/2018 This will go back to parent menu (main menu in this case).
+                    // This will go back to parent menu (main menu in this case).
                     mainGUI.openGUI(player);
                 }
             } catch (SQLException | ClassNotFoundException e) {
