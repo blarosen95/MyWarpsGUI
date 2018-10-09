@@ -18,7 +18,7 @@ public class WarpEditGUI {
     public static boolean openGUI(Player player) {
         warpEditGUI.setItem(0, buttonFactory.backButton());
         warpEditGUI.setItem(1, buttonFactory.create(Material.ANVIL, "My Warps", 1));
-        warpEditGUI.setItem(2, buttonFactory.create(Material.ANVIL, "Other Players' Warps", 1));
+        warpEditGUI.setItem(2, buttonFactory.create(Material.ANVIL, "Other Players' Warps", 2));
         IntStream.range(3, 9).forEach(slot -> warpEditGUI.setItem(slot, buttonFactory.emptySlot()));
         player.openInventory(warpEditGUI);
         return true;

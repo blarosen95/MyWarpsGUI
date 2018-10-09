@@ -14,13 +14,13 @@ import java.util.stream.IntStream;
 // TODO: 10/5/2018 Let's refactor to use AnvilGUI (eventually)
 public class MainGUI {
 
-    public Inventory mainGUI = Bukkit.createInventory(null, 9, "Main GUI"); // TODO: 10/5/2018 give this a better title param ("Main Menu"?)
-    private ButtonFactory buttonFactory = new ButtonFactory();
+    public static Inventory mainGUI = Bukkit.createInventory(null, 9, "Main GUI"); // TODO: 10/5/2018 give this a better title param ("Main Menu"?)
+    private static ButtonFactory buttonFactory = new ButtonFactory();
 
     public MainGUI() {
     }
 
-    public boolean openGUI(Player player) {
+    public static boolean openGUI(Player player) {
         ItemStack listButton = buttonFactory.create(Material.WRITTEN_BOOK, "List Warps", 1);
         BookMeta listBookMeta = (BookMeta) listButton.getItemMeta();
         listBookMeta.setAuthor(ChatColor.AQUA + "The_Dale_Gribble" + ChatColor.RESET);

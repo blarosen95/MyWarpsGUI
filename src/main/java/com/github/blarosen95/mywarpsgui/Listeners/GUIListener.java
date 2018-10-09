@@ -213,6 +213,50 @@ public class GUIListener implements Listener {
                 //Go to next page (page to open is the amount value for clicked).
                 listPagesGUI.openGUI(player, pagesListOut, inventory.getItem(inventory.getSize() - 1).getAmount());
             }
+        } else if (inventory.getName().equals("Create Warp") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                MainGUI.openGUI(player);
+            } else if (clickedType.equals(Material.ACACIA_STAIRS)) {
+                switch (clicked.getAmount()) {
+                    case 1:
+                        // TODO: 10/9/2018 Get input for Warp's Name.
+                    case 2:
+                        // TODO: 10/9/2018 Get input for Warp's Category.
+                    case 3:
+                        // TODO: 10/9/2018 Submit new Warp.
+                }
+            }
+        } else if (inventory.getName().equals("Edit Warps")) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                MainGUI.openGUI(player);
+            } else if (clickedType.equals(Material.ANVIL)) {
+                switch (clicked.getAmount()) {
+                    case 1:
+                        // TODO: 10/9/2018 Open submenu for editing this player's warps.
+                    case 2:
+                        // TODO: 10/9/2018 If the player has the right perms, open submenu for editing other players' warps. Otherwise exit the menus and send them a warning.
+                }
+            }
+        } else if (inventory.getName().equals("Delete Warps")) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                MainGUI.openGUI(player);
+            } else if (clickedType.equals(Material.LAVA_BUCKET)) {
+                switch (clicked.getAmount()) {
+                    case 1:
+                        // TODO: 10/9/2018 Open submenu for deleting this player's warps.
+                    case 2:
+                        // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
+                }
+            }
         }
         //If it's not our main menu:
         else {
