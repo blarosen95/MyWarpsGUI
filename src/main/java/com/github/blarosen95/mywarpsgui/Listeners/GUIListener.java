@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +35,12 @@ public class GUIListener implements Listener {
     public MainGUI mainGUI = new MainGUI();
 
     public ArrayList<Inventory> pagesList = new ArrayList<>();
+
+    public ArrayList<Inventory> pagesListAll = new ArrayList<>();
+    public ArrayList<Inventory> pagesListTown = new ArrayList<>();
+    public ArrayList<Inventory> pagesListFarm = new ArrayList<>();
+    public ArrayList<Inventory> pagesListShop = new ArrayList<>();
+    public ArrayList<Inventory> pagesListOther = new ArrayList<>();
 
     public GUIListener() {
     }
@@ -66,7 +73,7 @@ public class GUIListener implements Listener {
             Material clickedType = clicked.getType();
 
             if (clickedType == Material.WRITTEN_BOOK) {
-                // TODO: 10/5/2018 This will open our WarpListGUI menu.
+                //This will open our WarpListGUI menu.
                 WarpListGUI.openGUI((Player) event.getWhoClicked()); // TODO: 10/6/2018 Why bother with the casting? We could use the Player player variable instead.
             } else if (clickedType == Material.END_PORTAL_FRAME) {
                 // TODO: 10/5/2018 This will open our WarpCreateGUI menu.
@@ -86,6 +93,8 @@ public class GUIListener implements Listener {
             ArrayList<Warp> warps = new ArrayList<>(); // TODO: 10/5/2018 This might need a new name at some point...
             ArrayList<ItemStack> warpItems; // TODO: 10/5/2018 This might need a new name too...
 
+            //ListPage listPage = new ListPage();
+
             try {
                 if (clickedType == Material.DRAGON_HEAD) {
                     resultSet = db.getWarpsInCategory(1);
@@ -93,12 +102,12 @@ public class GUIListener implements Listener {
 
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, true)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
-                    listPage.createPages(warpItems, listItemPagination);
-                    this.pagesList = listPage.getListPagesList();
+                    listPage.createPages(warpItems, listItemPagination, "All List Page");
+                    this.pagesListAll = listPage.getListPagesList();
 
                     // TODO: 10/5/2018 The following is to determine whether or not the list fits on one page and then to call the appropriate menus.
                     if (listItemPagination.isNeedsPagination()) {
-                        listPagesGUI.openGUI(player, pagesList);
+                        listPagesGUI.openGUI(player, pagesListAll);
 
 
                         // TODO: 10/8/2018 Pretty sure there's no longer a need to check for this if statement (and also probably no need for the statement this one is in, nor the following else statement
@@ -108,7 +117,7 @@ public class GUIListener implements Listener {
                         }
 
                     } else {
-                        listPagesGUI.openGUI(player, pagesList);
+                        listPagesGUI.openGUI(player, pagesListAll);
                         // TODO: 10/5/2018 Create the appropriate single-page menu.
                     }
 
@@ -120,10 +129,10 @@ public class GUIListener implements Listener {
 
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
-                    listPage.createPages(warpItems, listItemPagination);
-                    this.pagesList = listPage.getListPagesList();
+                    listPage.createPages(warpItems, listItemPagination, "Towns List Page");
+                    this.pagesListTown = listPage.getListPagesList();
 
-                    listPagesGUI.openGUI(player, pagesList);
+                    listPagesGUI.openGUI(player, pagesListTown);
 
                 } else if (clickedType == Material.WHEAT) {
                     // This will list Farm warps.
@@ -132,10 +141,10 @@ public class GUIListener implements Listener {
 
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
-                    listPage.createPages(warpItems, listItemPagination);
-                    this.pagesList = listPage.getListPagesList();
+                    listPage.createPages(warpItems, listItemPagination, "Farms List Page");
+                    this.pagesListFarm = listPage.getListPagesList();
 
-                    listPagesGUI.openGUI(player, pagesList);
+                    listPagesGUI.openGUI(player, pagesListFarm);
 
                 } else if (clickedType == Material.CHEST) {
                     // This will list Shop warps.
@@ -144,10 +153,10 @@ public class GUIListener implements Listener {
 
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
-                    listPage.createPages(warpItems, listItemPagination);
-                    this.pagesList = listPage.getListPagesList();
+                    listPage.createPages(warpItems, listItemPagination, "Shops List Page");
+                    this.pagesListShop = listPage.getListPagesList();
 
-                    listPagesGUI.openGUI(player, pagesList);
+                    listPagesGUI.openGUI(player, pagesListShop);
 
                 } else if (clickedType == Material.COOKIE) {
                     // This will list Other warps.
@@ -156,10 +165,10 @@ public class GUIListener implements Listener {
 
                     warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, false)).collect(Collectors.toCollection(ArrayList::new));
                     ListItemPagination listItemPagination = new ListItemPagination(warpItems);
-                    listPage.createPages(warpItems, listItemPagination);
-                    this.pagesList = listPage.getListPagesList();
+                    listPage.createPages(warpItems, listItemPagination, "Others List Page");
+                    this.pagesListOther = listPage.getListPagesList();
 
-                    listPagesGUI.openGUI(player, pagesList);
+                    listPagesGUI.openGUI(player, pagesListOther);
 
                 } else if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA) {
                     // This will go back to parent menu (main menu in this case).
@@ -169,25 +178,43 @@ public class GUIListener implements Listener {
                 // TODO: 10/5/2018 Use an ErrorLogger to supplement this thrown message.
                 e.printStackTrace();
             }
-        } else if (inventory.getName().equals("List Page") && event.getSlotType() != SlotType.OUTSIDE) {
+        } else if (inventory.getName().contains("List Page") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
+            ArrayList<Inventory> pagesListOut = new ArrayList<>();
+
+            switch (inventory.getName().replace(" List Page", "")) {
+                case "All":
+                    pagesListOut = pagesListAll;
+                    break;
+                case "Towns":
+                    pagesListOut = pagesListTown;
+                    break;
+                case "Farms":
+                    pagesListOut = pagesListFarm;
+                    break;
+                case "Shops":
+                    pagesListOut = pagesListShop;
+                    break;
+                case "Others":
+                    pagesListOut = pagesListOther;
+            }
 
             if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
-                // TODO: 10/6/2018 Go to parent menu (in this case, parent is "Warp List GUI" menu)
+                //Go to parent menu (in this case, parent is "Warp List GUI" menu)
                 WarpListGUI.openGUI(player);
-                // TODO: 10/8/2018 Reset the pages so that a new list can be created in the same instance.
+                //Reset the pages so that a new list can be created in the same instance.
                 this.listPage = new ListPage();
             } else if (clickedType == Material.BARRIER) {
-                // TODO: 10/6/2018 Go back one page.
+                //Go back one page.
                 if (inventory.getItem(0).getAmount() == 1) {
-                    listPagesGUI.openGUI(player, pagesList, inventory.getItem(0).getAmount() - 1);
+                    listPagesGUI.openGUI(player, pagesListOut, inventory.getItem(0).getAmount() - 1);
                 } else {
-                    listPagesGUI.openGUI(player, pagesList, inventory.getItem(0).getAmount() - 2);
+                    listPagesGUI.openGUI(player, pagesListOut, inventory.getItem(0).getAmount() - 2);
                 }
             } else if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "" + "→" + ChatColor.RESET)) {
-                // TODO: 10/6/2018 Go to next page (page to open is the amount value for clicked).
-                listPagesGUI.openGUI(player, pagesList, inventory.getItem(inventory.getSize() - 1).getAmount());
+                //Go to next page (page to open is the amount value for clicked).
+                listPagesGUI.openGUI(player, pagesListOut, inventory.getItem(inventory.getSize() - 1).getAmount());
             }
         }
         //If it's not our main menu:
@@ -195,4 +222,17 @@ public class GUIListener implements Listener {
             return;
         }
     }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        Player player = (Player) event.getPlayer();
+        Inventory inventory = event.getInventory();
+
+        //If the inventory is a list page (might have uses for this EventHandler for other menus eventually)
+        if (inventory.getName().contains("List Page")) {
+            //Reset the pages so a new list can be created in the same instance.
+            this.listPage = new ListPage();
+        }
+    }
+
 }

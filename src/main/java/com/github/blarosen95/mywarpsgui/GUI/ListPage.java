@@ -26,8 +26,8 @@ public class ListPage {
      * @return true for now, eventually I'd like to change this to return the ArrayList of listPageGUI's!
      */
     @SuppressWarnings("Duplicates")
-    public boolean createPages(ArrayList<ItemStack> warpItems, ListItemPagination pagination) {
-        Inventory listPageGUI = getBlankPage("List Page");
+    public boolean createPages(ArrayList<ItemStack> warpItems, ListItemPagination pagination, String pageName) {
+        Inventory listPageGUI = getBlankPage(pageName);
 
         if (pagination.isNeedsPagination()) {
             // TODO: 10/5/2018 Fori using pagesNeeded and nesting a loop to create x-y where x is the first item to go in the page and y is that + 25?
@@ -52,7 +52,7 @@ public class ListPage {
                         warpItems.subList(0, 26).clear();
                         listPageGUI.setItem(26, warpListItem.makeButtonItem(Material.MAGENTA_GLAZED_TERRACOTTA, "→", page + 1, false));
                         listPagesList.add(listPageGUI);
-                        listPageGUI = getBlankPage("List Page");
+                        listPageGUI = getBlankPage(pageName);
                         // TODO: 10/6/2018 breaks the page: listPageGUI.clear();
 
                         //Here's our extra page creation:
@@ -63,7 +63,7 @@ public class ListPage {
                         IntStream.range(warpItems.size(), 27).forEach(slot -> finalListPageGUI5.setItem(slot, new ItemStack(Material.AIR, 1)));
                         // TODO: 10/6/2018 the following line was missing and I believe I had simply forgotten to write it:
                         listPagesList.add(listPageGUI);
-                        listPageGUI = getBlankPage("List Page");
+                        listPageGUI = getBlankPage(pageName);
                         // TODO: 10/6/2018 breaks the page: listPageGUI.clear();
                     } else {
                         if (page == 0) {
@@ -76,7 +76,7 @@ public class ListPage {
                         //Clear out the consumed 25 items
                         warpItems.subList(0, 26).clear();
                         listPagesList.add(listPageGUI);
-                        listPageGUI = getBlankPage("List Page");
+                        listPageGUI = getBlankPage(pageName);
                         // TODO: 10/6/2018 breaks the page: listPageGUI.clear();
                     }
                 } else {
@@ -91,7 +91,7 @@ public class ListPage {
                     warpItems.subList(0, 26).clear();
                     listPageGUI.setItem(26, warpListItem.makeButtonItem(Material.MAGENTA_GLAZED_TERRACOTTA, "→", page + 1, false));
                     listPagesList.add(listPageGUI); // TODO: 10/5/2018 This is the major revision I mention above the class. If this works, I'll shoot my pet rock.
-                    listPageGUI = getBlankPage("List Page");
+                    listPageGUI = getBlankPage(pageName);
                     // TODO: 10/6/2018 breaks the page: listPageGUI.clear();
                 }
             }
@@ -107,7 +107,7 @@ public class ListPage {
             }
 
             listPagesList.add(listPageGUI);
-            listPageGUI = getBlankPage("List Page");
+            listPageGUI = getBlankPage(pageName);
             // TODO: 10/6/2018 This might be breaking the page(s): listPageGUI.clear();
         }
         return true;

@@ -14,6 +14,9 @@ public class WarpListGUI {
     public WarpListGUI() {
     }
 
+    // TODO: 10/9/2018 Add a searchWarpsButton that opens a submenu with buttons for which category of warp to search in (same categories as below).
+    // After a category is chosen, text input should be retrieved.
+    
     public static boolean openGUI(Player player) {
         ItemStack allButton = new ItemStack(Material.DRAGON_HEAD, 1);
         ItemMeta allMeta = allButton.getItemMeta();
