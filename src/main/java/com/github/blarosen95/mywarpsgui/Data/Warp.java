@@ -59,4 +59,8 @@ public class Warp {
     public String convertUUID(String uuid) {
         return toName.getName(uuid);
     }
+
+    public String getWarpAsString() {
+        return String.format("%s: by %s (aka %s). Category is: %s, file named %s", name, creatorUUID, creatorName, category, essentialsFile);
+    }
 }

@@ -176,6 +176,8 @@ public class GUIListener implements Listener {
             if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
                 // TODO: 10/6/2018 Go to parent menu (in this case, parent is "Warp List GUI" menu)
                 WarpListGUI.openGUI(player);
+                // TODO: 10/8/2018 Reset the pages so that a new list can be created in the same instance.
+                this.listPage = new ListPage();
             } else if (clickedType == Material.BARRIER) {
                 // TODO: 10/6/2018 Go back one page.
                 if (inventory.getItem(0).getAmount() == 1) {

@@ -96,11 +96,16 @@ public class ListPage {
                 }
             }
         } else {
-            System.out.println(warpItems.size());
             listPageGUI.setItem(0, warpListItem.makeButtonItem(Material.MAGENTA_GLAZED_TERRACOTTA, "←", 1, true));
             Inventory finalListPageGUI = listPageGUI;
             IntStream.range(1, warpItems.size()).forEach(slot -> finalListPageGUI.setItem(slot, warpItems.get(slot - 1)));
             IntStream.range(warpItems.size(), 27).forEach(slot -> finalListPageGUI.setItem(slot, new ItemStack(Material.AIR, 1)));
+
+            //The previous line removes the back button on lists with no warps in them, we need to put it back in the size is 0.
+            if (warpItems.size() == 0) {
+                listPageGUI.setItem(0, warpListItem.makeButtonItem(Material.MAGENTA_GLAZED_TERRACOTTA, "←", 1, true));
+            }
+
             listPagesList.add(listPageGUI);
             listPageGUI = getBlankPage("List Page");
             // TODO: 10/6/2018 This might be breaking the page(s): listPageGUI.clear();

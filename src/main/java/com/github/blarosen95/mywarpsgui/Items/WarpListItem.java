@@ -1,7 +1,6 @@
 package com.github.blarosen95.mywarpsgui.Items;
 
 import com.github.blarosen95.mywarpsgui.Data.Warp;
-import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;

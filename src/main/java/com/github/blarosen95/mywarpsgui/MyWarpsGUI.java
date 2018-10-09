@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 
@@ -46,7 +47,7 @@ public final class MyWarpsGUI extends JavaPlugin {
             SQLiteDatabase sqLiteDatabase = new SQLiteDatabase();
             try {
                 sqLiteDatabase.deleteWarp(new Warp("atest", ((Player) cs).getUniqueId().toString(), "Other", "atest.yml"));
-            } catch (SQLException | ClassNotFoundException e) {
+            } catch (SQLException | ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
         } else if (cmd.getName().equalsIgnoreCase("mywarpsgui")) {

@@ -2,9 +2,12 @@ package com.github.blarosen95.mywarpsgui.Data;
 
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.MyWarpsParser;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -13,6 +16,12 @@ public class SQLiteDatabase {
     private static boolean hasData = false;
     private static File dataFolder = MyWarpsGUI.getInstance().getDataFolder();
     private static String warpsDBFile = dataFolder.getAbsolutePath() + File.separator + "MyWarpsGUI.db";
+
+    private static File essentialsWarpsFolder = Bukkit.getServer().getPluginManager().getPlugin("Essentials").getDataFolder();
+
+    private String locateEssentialsWarpFile(String fileName) {
+        return essentialsWarpsFolder.getAbsolutePath() + File.separator + "warps" + File.separator + fileName;
+    }
 
     private void getConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.sqlite.JDBC");
@@ -96,7 +105,7 @@ public class SQLiteDatabase {
     // (todo) OR the command sender has the right permissions to delete other's warps
     // TODO: 10/4/2018 (Successful) calls to this command should fund $500 to the warp's creator.
     // (todo) Unsuccessful calls should inform the command sender to such.
-    public boolean deleteWarp(Warp warp) throws SQLException, ClassNotFoundException {
+    public boolean deleteWarp(Warp warp) throws SQLException, ClassNotFoundException, IOException {
         if (con == null) {
             getConnection();
         }
@@ -111,6 +120,9 @@ public class SQLiteDatabase {
         }
 
         if (warpExists) {
+            String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
+            // TODO: 10/8/2018 does this file deletion work properly?
+            Files.deleteIfExists(Paths.get(fileLocation));
             PreparedStatement prep = con.prepareStatement("DELETE FROM warps WHERE warp_name=? AND creator_uuid=?");
             prep.setString(1, warp.getName());
             prep.setString(2, warp.getCreatorUUID());
@@ -157,4 +169,39 @@ public class SQLiteDatabase {
         //If one of the above cases did not return our ResultSet, then the value of cat wasn't a valid option
         return null; // TODO: 10/5/2018 calls to this method should check if null was returned, and if so, they should log an error.
     }
+
+    public boolean addWarp(Warp warp) throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+
+        // TODO: 10/8/2018 We could forgo this boolean and just move the database update (and file creation) procedures into the if (!rs.next()) body.
+        boolean warpExists = true;
+
+        PreparedStatement psQuery = con.prepareStatement("SELECT * FROM warps WHERE warp_name=? AND creator_uuid=?");
+        psQuery.setString(1, warp.getName());
+        psQuery.setString(2, warp.getCreatorUUID());
+        ResultSet rs = psQuery.executeQuery();
+        if (!rs.next()) {
+            warpExists = false;
+        }
+
+        if (!warpExists) {
+            String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
+            // TODO: 10/8/2018 does the file creation work properly?
+            if (Files.exists(Paths.get(fileLocation))) {
+                return false;
+                // TODO: 10/8/2018 hopefully this is only true when the warp is in the Database already. This is just to be extra safe.
+            }
+            //Create the file
+            // TODO: 10/8/2018 Create the warp.getEssentialsFile file inside of Essentials' warps folder (creation of the file includes writing the info for the yaml file itself!)
+
+            //Add the warp to our database
+            // TODO: 10/8/2018 add to the db.
+
+            return true;
+        }
+        return false;
+    }
+
 }
