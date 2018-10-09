@@ -1,5 +1,6 @@
 package com.github.blarosen95.mywarpsgui.GUI;
 
+import com.github.blarosen95.mywarpsgui.Items.ButtonFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -7,55 +8,30 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.stream.IntStream;
 
 // TODO: 10/5/2018 Let's refactor to use AnvilGUI (eventually)
 public class MainGUI {
 
-    public Inventory mainGUI = Bukkit.createInventory(null, 9, "Main GUI"); // TODO: 10/5/2018 give this a better title param
+    public Inventory mainGUI = Bukkit.createInventory(null, 9, "Main GUI"); // TODO: 10/5/2018 give this a better title param ("Main Menu"?)
+    private ButtonFactory buttonFactory = new ButtonFactory();
 
     public MainGUI() {
     }
 
     public boolean openGUI(Player player) {
-        ItemStack listButton = new ItemStack(Material.WRITTEN_BOOK, 1);
-        ItemMeta listMeta = listButton.getItemMeta();
-        listMeta.setDisplayName("List Warps");
-        listButton.setItemMeta(listMeta);
+        ItemStack listButton = buttonFactory.create(Material.WRITTEN_BOOK, "List Warps", 1);
         BookMeta listBookMeta = (BookMeta) listButton.getItemMeta();
         listBookMeta.setAuthor(ChatColor.AQUA + "The_Dale_Gribble" + ChatColor.RESET);
         listButton.setItemMeta(listBookMeta);
-
-        ItemStack createButton = new ItemStack(Material.END_PORTAL_FRAME, 1);
-        ItemMeta createMeta = createButton.getItemMeta();
-        createMeta.setDisplayName("Create Warp");
-        createButton.setItemMeta(createMeta);
-
-        ItemStack editButton = new ItemStack(Material.ANVIL, 1);
-        ItemMeta editMeta = editButton.getItemMeta();
-        editMeta.setDisplayName("Edit Warp");
-        editButton.setItemMeta(editMeta);
-
-        ItemStack deleteButton = new ItemStack(Material.LAVA_BUCKET, 1);
-        ItemMeta deleteMeta = deleteButton.getItemMeta();
-        deleteMeta.setDisplayName("Delete Warp");
-        deleteButton.setItemMeta(deleteMeta);
-
-        ItemStack emptySlot = new ItemStack(Material.AIR, 1);
-
         mainGUI.setItem(0, listButton); //List warps
-        mainGUI.setItem(1, createButton); //Create warp
-        mainGUI.setItem(2, editButton); //Edit warp
-        mainGUI.setItem(3, deleteButton); //Delete warp
-        mainGUI.setItem(4, emptySlot); //Does nothing
-        mainGUI.setItem(5, emptySlot); //Does nothing
-        mainGUI.setItem(6, emptySlot); //Does nothing
-        mainGUI.setItem(7, emptySlot); //Does nothing
-        mainGUI.setItem(8, emptySlot); //Does nothing
 
+        mainGUI.setItem(1, buttonFactory.create(Material.END_PORTAL_FRAME, "Create Warp", 1)); //Create warp
+        mainGUI.setItem(2, buttonFactory.create(Material.ANVIL, "Edit Warp", 1)); //Edit warp
+        mainGUI.setItem(3, buttonFactory.create(Material.LAVA_BUCKET, "Delete Warp", 1)); //Delete warp
+        IntStream.range(4, 9).forEach(slot -> mainGUI.setItem(slot, buttonFactory.emptySlot())); //Does nothing
         player.openInventory(mainGUI);
-
-
         return true;
     }
 }

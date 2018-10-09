@@ -2,10 +2,7 @@ package com.github.blarosen95.mywarpsgui.Listeners;
 
 import com.github.blarosen95.mywarpsgui.Data.SQLiteDatabase;
 import com.github.blarosen95.mywarpsgui.Data.Warp;
-import com.github.blarosen95.mywarpsgui.GUI.ListPage;
-import com.github.blarosen95.mywarpsgui.GUI.ListPagesGUI;
-import com.github.blarosen95.mywarpsgui.GUI.MainGUI;
-import com.github.blarosen95.mywarpsgui.GUI.WarpListGUI;
+import com.github.blarosen95.mywarpsgui.GUI.*;
 import com.github.blarosen95.mywarpsgui.Items.WarpListItem;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.ListItemPagination;
@@ -26,21 +23,21 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class GUIListener implements Listener {
-    public SQLiteDatabase db = MyWarpsGUI.getSqLiteDatabase();
-    public WarpListItem warpListItem = new WarpListItem();
+    private SQLiteDatabase db = MyWarpsGUI.getSqLiteDatabase();
+    private WarpListItem warpListItem = new WarpListItem();
 
-    public ListPage listPage = new ListPage();
+    private ListPage listPage = new ListPage();
 
-    public ListPagesGUI listPagesGUI = new ListPagesGUI();
-    public MainGUI mainGUI = new MainGUI();
+    private ListPagesGUI listPagesGUI = new ListPagesGUI();
+    private MainGUI mainGUI = new MainGUI();
 
     public ArrayList<Inventory> pagesList = new ArrayList<>();
 
-    public ArrayList<Inventory> pagesListAll = new ArrayList<>();
-    public ArrayList<Inventory> pagesListTown = new ArrayList<>();
-    public ArrayList<Inventory> pagesListFarm = new ArrayList<>();
-    public ArrayList<Inventory> pagesListShop = new ArrayList<>();
-    public ArrayList<Inventory> pagesListOther = new ArrayList<>();
+    private ArrayList<Inventory> pagesListAll = new ArrayList<>();
+    private ArrayList<Inventory> pagesListTown = new ArrayList<>();
+    private ArrayList<Inventory> pagesListFarm = new ArrayList<>();
+    private ArrayList<Inventory> pagesListShop = new ArrayList<>();
+    private ArrayList<Inventory> pagesListOther = new ArrayList<>();
 
     public GUIListener() {
     }
@@ -76,21 +73,21 @@ public class GUIListener implements Listener {
                 //This will open our WarpListGUI menu.
                 WarpListGUI.openGUI((Player) event.getWhoClicked()); // TODO: 10/6/2018 Why bother with the casting? We could use the Player player variable instead.
             } else if (clickedType == Material.END_PORTAL_FRAME) {
-                // TODO: 10/5/2018 This will open our WarpCreateGUI menu.
-                player.sendMessage("This will open WarpCreateGUI");
+                //This will open our WarpCreateGUI menu.
+                WarpCreateGUI.openGUI(player);
             } else if (clickedType == Material.ANVIL) {
-                // TODO: 10/5/2018 This will open our WarpEditGUI menu.
-                player.sendMessage("This will open WarpEditGUI");
+                //This will open our WarpEditGUI menu.
+                WarpEditGUI.openGUI(player);
             } else if (clickedType == Material.LAVA_BUCKET) {
-                // TODO: 10/5/2018 This will open our WarpDeleteGUI menu.
-                player.sendMessage("This will open WarpDeleteGUI");
+                //This will open our WarpDeleteGUI menu.
+                WarpDeleteGUI.openGUI(player);
             }
 
         } else if (inventory.getName().equals("Warp List GUI") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
             ResultSet resultSet;
-            ArrayList<Warp> warps = new ArrayList<>(); // TODO: 10/5/2018 This might need a new name at some point...
+            ArrayList<Warp> warps; // TODO: 10/5/2018 This might need a new name at some point...
             ArrayList<ItemStack> warpItems; // TODO: 10/5/2018 This might need a new name too...
 
             //ListPage listPage = new ListPage();
