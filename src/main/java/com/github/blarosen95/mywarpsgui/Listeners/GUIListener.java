@@ -6,6 +6,7 @@ import com.github.blarosen95.mywarpsgui.GUI.*;
 import com.github.blarosen95.mywarpsgui.Items.WarpListItem;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.ListItemPagination;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -73,8 +74,9 @@ public class GUIListener implements Listener {
                 //This will open our WarpListGUI menu.
                 WarpListGUI.openGUI((Player) event.getWhoClicked()); // TODO: 10/6/2018 Why bother with the casting? We could use the Player player variable instead.
             } else if (clickedType == Material.END_PORTAL_FRAME) {
-                //This will open our WarpCreateGUI menu.
-                WarpCreateGUI.openGUI(player);
+                //This will open our WarpCreateGUI's parent menu.
+                //WarpCreateGUI.openGUI(player);
+                WarpCreationGUI.openGUI(player);
             } else if (clickedType == Material.ANVIL) {
                 //This will open our WarpEditGUI menu.
                 WarpEditGUI.openGUI(player);
@@ -218,18 +220,25 @@ public class GUIListener implements Listener {
             Material clickedType = clicked.getType();
 
             if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
-                MainGUI.openGUI(player);
+                WarpCreationGUI.openGUI(player);
             } else if (clickedType.equals(Material.ACACIA_STAIRS)) {
                 switch (clicked.getAmount()) {
                     case 1:
+                        System.out.println(player.getName());
                         // TODO: 10/9/2018 Get input for Warp's Name.
-                    case 2:
-                        // TODO: 10/9/2018 Get input for Warp's Category.
+                        new AnvilGUI(MyWarpsGUI.getInstance(), player, "Warp's Name", (playerBi, reply) -> {
+                            Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply + ".yml");
+                            System.out.println(tempWarp.getWarpAsString());
+                            // TODO: 10/9/2018 Charge the player $1,000 (if they don't have it, exit menu and inform them why they cant make the warp)
+                            // TODO: 10/9/2018 Try to add the warp to the database, if the addWarp call returns any issues, refund the player $1,000 and explain why the warp couldn't be created.
+                            return null;
+                        });
                     case 3:
                         // TODO: 10/9/2018 Submit new Warp.
+                        // TODO: 10/9/2018 The previous case actually handles the whole thing.
                 }
             }
-        } else if (inventory.getName().equals("Edit Warps")) {
+        } else if (inventory.getName().equals("Edit Warps") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
 
@@ -243,7 +252,7 @@ public class GUIListener implements Listener {
                         // TODO: 10/9/2018 If the player has the right perms, open submenu for editing other players' warps. Otherwise exit the menus and send them a warning.
                 }
             }
-        } else if (inventory.getName().equals("Delete Warps")) {
+        } else if (inventory.getName().equals("Delete Warps") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
 
@@ -256,6 +265,21 @@ public class GUIListener implements Listener {
                     case 2:
                         // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
                 }
+            }
+        } else if (inventory.getName().equals("Warp Category") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                MainGUI.openGUI(player);
+            } else if (clickedType.equals(Material.SIGN)) {
+                WarpCreateGUI.openGUI(player, "Town");
+            } else if (clickedType.equals(Material.WHEAT)) {
+                WarpCreateGUI.openGUI(player, "Farm");
+            } else if (clickedType.equals(Material.CHEST)) {
+                WarpCreateGUI.openGUI(player, "Shop");
+            } else if (clickedType.equals(Material.COOKIE)) {
+                WarpCreateGUI.openGUI(player, "Other");
             }
         }
         //If it's not our main menu:
