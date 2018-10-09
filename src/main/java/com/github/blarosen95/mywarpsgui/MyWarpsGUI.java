@@ -6,9 +6,11 @@ import com.github.blarosen95.mywarpsgui.Data.Warp;
 import com.github.blarosen95.mywarpsgui.GUI.MainGUI;
 import com.github.blarosen95.mywarpsgui.Listeners.GUIListener;
 import com.github.blarosen95.mywarpsgui.Util.UUIDToName;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -21,15 +23,22 @@ public final class MyWarpsGUI extends JavaPlugin {
     private static Config config;
     private static SQLiteDatabase sqLiteDatabase;
     private static UUIDToName uuidToName;
+    private static Economy economy;
 
     private MainGUI mainGUI;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
+        if (!setupEconomy()) {
+            getLogger().severe(String.format("[%s] Disabled due to missing dependency: Vault!", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         instance = this;
         config = new Config();
-        sqLiteDatabase = new SQLiteDatabase();
+        sqLiteDatabase = new SQLiteDatabase(); // TODO: 10/9/2018 can we make this constructor initialize the database similiar to the Config() constructor?
         uuidToName = new UUIDToName();
 
         mainGUI = new MainGUI();
@@ -66,6 +75,18 @@ public final class MyWarpsGUI extends JavaPlugin {
 
     public static UUIDToName getUuidToName() {
         return uuidToName;
+    }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) return false;
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) return false;
+        economy = rsp.getProvider();
+        return economy != null;
+    }
+
+    public static Economy getEconomy() {
+        return economy;
     }
 
 }

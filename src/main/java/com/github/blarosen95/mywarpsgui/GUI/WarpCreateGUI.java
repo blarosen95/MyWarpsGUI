@@ -32,7 +32,7 @@ public class WarpCreateGUI {
                 break;
         }
         warpCreateGUI.setItem(0, buttonFactory.backButton());
-        warpCreateGUI.setItem(1, buttonFactory.create(Material.ACACIA_STAIRS, "Warp's Name?", 1)); // Opens the player input prompt for the Warp's name.
+        warpCreateGUI.setItem(1, buttonFactory.create(Material.NAME_TAG, "Warp's Name?", 1)); // Opens the player input prompt for the Warp's name.
         warpCreateGUI.setItem(2, buttonFactory.create(Material.ACACIA_STAIRS, "Create Warp", 3,
                 ChatColor.RESET + "" + ChatColor.BOLD + "" + ChatColor.RED + "This will cost $1000" + ChatColor.RESET)); // Submits the warp, calling the DB addWarp method.
 

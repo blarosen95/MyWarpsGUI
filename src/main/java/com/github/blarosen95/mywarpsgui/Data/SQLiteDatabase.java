@@ -1,8 +1,10 @@
 package com.github.blarosen95.mywarpsgui.Data;
 
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
+import com.github.blarosen95.mywarpsgui.Util.CreateEssentialsWarpFile;
 import com.github.blarosen95.mywarpsgui.Util.MyWarpsParser;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,7 +172,15 @@ public class SQLiteDatabase {
         return null; // TODO: 10/5/2018 calls to this method should check if null was returned, and if so, they should log an error.
     }
 
-    public boolean addWarp(Warp warp) throws SQLException, ClassNotFoundException {
+    /**
+     * Used to both add a warp to the Database as well as to create the Essentials/Warps/ .yml file for the warp.
+     * @param warp the Warp object to use.
+     * @param player the Player creating the Warp.
+     * @return a String containing the reason why the Warp couldn't be created, null if it was created successfully.
+     * @throws SQLException throws SQLExceptions
+     * @throws ClassNotFoundException throws ClassNotFoundExceptions
+     */
+    public String addWarp(Warp warp, Player player) throws SQLException, ClassNotFoundException {
         if (con == null) {
             getConnection();
         }
@@ -188,20 +198,31 @@ public class SQLiteDatabase {
 
         if (!warpExists) {
             String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
-            // TODO: 10/8/2018 does the file creation work properly?
             if (Files.exists(Paths.get(fileLocation))) {
-                return false;
+                return "A warp with that file name already exists, please make a post in #support on the Discord Server. Be sure to include the name you tried to use for the warp!";
                 // TODO: 10/8/2018 hopefully this is only true when the warp is in the Database already. This is just to be extra safe.
             }
             //Create the file
-            // TODO: 10/8/2018 Create the warp.getEssentialsFile file inside of Essentials' warps folder (creation of the file includes writing the info for the yaml file itself!)
+            CreateEssentialsWarpFile createEssentialsWarpFile = new CreateEssentialsWarpFile(warp, player);
+            try {
+                createEssentialsWarpFile.createFileContents();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println(String.format("Caused by player '%s' while creating the warp's %s", player.getName(), warp.getEssentialsFile()));
+                return "An internal error occurred while attempting to create your warp. Your balance has not been charged for this.";
+            }
 
             //Add the warp to our database
-            // TODO: 10/8/2018 add to the db.
-
-            return true;
+            PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO warps (warp_name, warp_category, creator_uuid, creator_name, essentials_warp_file) VALUES (?,?,?,?,?);");
+            preparedStatement.setString(1, warp.getName());
+            preparedStatement.setString(2, warp.getCategory());
+            preparedStatement.setString(3, warp.getCreatorUUID());
+            preparedStatement.setString(4, warp.getCreatorName());
+            preparedStatement.setString(5, warp.getEssentialsFile());
+            preparedStatement.execute();
+            return null;
         }
-        return false;
+        return "A warp with that name already exists. You need to pick a new name.";
     }
 
 }

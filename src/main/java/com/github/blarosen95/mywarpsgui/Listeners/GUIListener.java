@@ -221,13 +221,20 @@ public class GUIListener implements Listener {
 
             if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
                 WarpCreationGUI.openGUI(player);
+            } else if (clickedType.equals(Material.NAME_TAG)) {
+                new AnvilGUI(MyWarpsGUI.getInstance(), player, "Name?", (playerBi, reply) -> {
+                    Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply + ".yml");
+                    System.out.println(tempWarp.getWarpAsString());
+                    ConfirmCreateGUI.openGUI(player, tempWarp);
+                    return "test";
+                });
             } else if (clickedType.equals(Material.ACACIA_STAIRS)) {
                 switch (clicked.getAmount()) {
                     case 1:
                         System.out.println(player.getName());
                         // TODO: 10/9/2018 Get input for Warp's Name.
                         new AnvilGUI(MyWarpsGUI.getInstance(), player, "Warp's Name", (playerBi, reply) -> {
-                            Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply + ".yml");
+                            Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply.toLowerCase() + ".yml");
                             System.out.println(tempWarp.getWarpAsString());
                             // TODO: 10/9/2018 Charge the player $1,000 (if they don't have it, exit menu and inform them why they cant make the warp)
                             // TODO: 10/9/2018 Try to add the warp to the database, if the addWarp call returns any issues, refund the player $1,000 and explain why the warp couldn't be created.
@@ -280,6 +287,38 @@ public class GUIListener implements Listener {
                 WarpCreateGUI.openGUI(player, "Shop");
             } else if (clickedType.equals(Material.COOKIE)) {
                 WarpCreateGUI.openGUI(player, "Other");
+            }
+        } else if (inventory.getName().equals("Confirmation") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                WarpCreationGUI.openGUI(player);
+            } else if (clickedType.equals(Material.END_PORTAL_FRAME)) {
+                if (MyWarpsGUI.getEconomy().has(player, 1000)) {
+                    // TODO: 10/9/2018 Try to create the warp, refunding the player $1000 if the warp can't be created (also send a message to them saying why it can't be created).
+                    Warp tempWarp = new Warp(inventory.getItem(1).getItemMeta().getDisplayName(), player.getUniqueId().toString(), player.getName(), inventory.getItem(2).getItemMeta().getDisplayName(), inventory.getItem(1).getItemMeta().getDisplayName().toLowerCase() + ".yml");
+                    try {
+                        String wasWarpAdded = db.addWarp(tempWarp, player);
+                        if (wasWarpAdded != null) {
+                            player.closeInventory();
+                            player.sendMessage(String.format("Your warp, %s, could not be created because: %s", tempWarp.getName(), wasWarpAdded));
+                        } else {
+                            player.sendMessage(String.format("%s was successfully created as a new %s Warp! You have been charged $1,000 for the warp.", tempWarp.getName(), tempWarp.getCategory()));
+                            MyWarpsGUI.getEconomy().withdrawPlayer(player, 1000);
+                            MyWarpsGUI.getInstance().getServer().broadcastMessage(String.format("%s just created \"%s\" a new %s warp!", player.getName(), tempWarp.getName(), tempWarp.getCategory()));
+                            player.closeInventory();
+                        }
+                    } catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                        System.out.println("Caused by player: " + player.getName());
+                        player.sendMessage("An internal error occurred while attempting to create your warp; you have not been charged.");
+                    }
+                } else {
+                    // TODO: 10/9/2018 Tell the player they don't have enough money to create a warp.
+                    player.closeInventory();
+                    player.sendMessage("You do not have enough money to make a warp.");
+                }
             }
         }
         //If it's not our main menu:
