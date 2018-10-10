@@ -4,11 +4,14 @@ import com.github.blarosen95.mywarpsgui.Data.SQLiteDatabase;
 import com.github.blarosen95.mywarpsgui.Data.Warp;
 import com.github.blarosen95.mywarpsgui.GUI.*;
 import com.github.blarosen95.mywarpsgui.Items.WarpListItem;
+import com.github.blarosen95.mywarpsgui.Materials.ButtonMaterials;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.ListItemPagination;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,7 +20,9 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -203,6 +208,7 @@ public class GUIListener implements Listener {
                     break;
                 case "Others":
                     pagesListOut = pagesListOther;
+                    break;
             }
 
             if (clickedType == Material.MAGENTA_GLAZED_TERRACOTTA && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
@@ -246,6 +252,7 @@ public class GUIListener implements Listener {
                             // TODO: 10/9/2018 Try to add the warp to the database, if the addWarp call returns any issues, refund the player $1,000 and explain why the warp couldn't be created.
                             return null;
                         });
+                        break;
                     case 3:
                         // TODO: 10/9/2018 Submit new Warp.
                         // TODO: 10/9/2018 The previous case actually handles the whole thing.
@@ -288,6 +295,7 @@ public class GUIListener implements Listener {
                             listPage.createPages(warpItems, listItemPagination, "Delete Page");
                             this.pagesListDeleteOwned.put(player.getUniqueId().toString(), listPage.getListPagesList());
                             listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()));
+                            break; // TODO: 10/10/2018 if this page isn't right anymore, this is why.
 
                         case 2:
                             // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
@@ -303,6 +311,7 @@ public class GUIListener implements Listener {
                                 player.sendMessage("You do not have permission to delete warps created by other players.");
                                 WarpDeleteGUI.openGUI(player);
                             }
+                            break; // TODO: 10/10/2018 If this page isn't right anymore, this is why.
                     }
                 } catch (SQLException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -359,20 +368,148 @@ public class GUIListener implements Listener {
         } else if (inventory.getName().equals("Warp Owners Page") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
+            ArrayList<Warp> warps;
+            ArrayList<ItemStack> warpItems;
+            ResultSet resultSet;
 
             if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
                 WarpDeleteGUI.openGUI(player);
             } else if (clickedType.equals(Material.PLAYER_HEAD)) {
-                // TODO: 10/10/2018 Open up a Delete Page for that player.
+                // TODO: 10/10/2018 Open up a Delete Page for that player. (needs to have an instance hashmap with this player's uuid as key and the desired owner's uuid as the value)
+                SkullMeta skullMeta = (SkullMeta) clicked.getItemMeta();
+                try {
+                    resultSet = db.getWarpsByPlayer(skullMeta.getOwningPlayer());
+                    warps = convertResultSet(resultSet);
+
+                    warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, true)).collect(Collectors.toCollection(ArrayList::new));
+                    ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                    listPage.createPages(warpItems, listItemPagination, "Delete Page");
+                    this.pagesListDeleteOwned.put(skullMeta.getOwningPlayer().getUniqueId().toString(), listPage.getListPagesList());
+                    listPagesGUI.openGUI(player, pagesListDeleteOwned.get(skullMeta.getOwningPlayer().getUniqueId().toString()));
+
+                } catch (SQLException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             } else if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "" + "→" + ChatColor.RESET)) {
-                // TODO: 10/10/2018 pull next page.
+                //pull next page.
                 listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(inventory.getSize() - 1).getAmount());
             } else if (clickedType.equals(Material.BARRIER)) {
-                // TODO: 10/10/2018 go back one page.
+                //go back one page.
                 if (inventory.getItem(0).getAmount() == 1) {
                     listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 1);
                 } else {
                     listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 2);
+                }
+            }
+        } else if (inventory.getName().equals("Delete Page") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+            String pageUUID = null;
+            //Ensure that the page contains at least one Warp
+            if (inventory.getItem(1).getType().equals(Material.SIGN)) {
+                try {
+                    pageUUID = db.getUUIDByWarpName(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
+                } catch (SQLException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
+                WarpDeleteGUI.openGUI(player);
+            } else if (clickedType.equals(Material.SIGN)) {
+                //Using the Sign's name, send the warp to be deleted to a ConfirmDeleteGUI menu (where they can: go back, review the warp, and confirm the deletion and receive $500.)
+                try {
+                    ConfirmDeleteGUI.openGUI(player, db.getWarpByName(clicked.getItemMeta().getDisplayName().replaceAll("§\\w", "")));
+                } catch (SQLException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "" + "→" + ChatColor.RESET)) {
+                //Pull next page.
+// todo               listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()), inventory.getItem(inventory.getSize() - 1).getAmount());
+                listPagesGUI.openGUI(player, pagesListDeleteOwned.get(pageUUID), inventory.getItem(inventory.getSize() - 1).getAmount());
+            } else if (clickedType.equals(Material.BARRIER)) {
+                //Go back one Page.
+                if (inventory.getItem(0).getAmount() >= 1) { // TODO: 10/10/2018 make sure this is the right math (it likely is, so we'll probably fix this and the other barrier checks)
+                    // TODO: 10/10/2018 MAJOR: THIS WHOLE PAGE BUTTON CHECK ISN'T NEEDED HERE. BUT!!! IT IS NEEDED FOR THE  NEXT PAGE BUTTONS SINCE YOU
+// todo                   listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 1);
+                    listPagesGUI.openGUI(player, pagesListDeleteOwned.get(pageUUID), inventory.getItem(0).getAmount() - 1);
+                } /*else {
+//todo                    listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 2);
+                    listPagesGUI.openGUI(player, pagesListDeleteOwned.get(pageUUID), inventory.getItem(0).getAmount() - 2);
+                }*/
+            }
+        } else if (inventory.getName().equals("Delete Confirmation") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+            ArrayList<Material> catMats = ButtonMaterials.getCategories();
+            ArrayList<Material> skullMats = ButtonMaterials.getSkulls();
+            Warp warpDeleting;
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
+                if (inventory.getItem(4).getType() == Material.AIR) {
+                    //Then open this player's Delete Warps List.
+                    listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()));
+                } else {
+                    //Then open this warp owner's warp delete list.
+                    System.out.println(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
+                    try {
+                        listPagesGUI.openGUI(player, pagesListDeleteOwned.get(db.getUUIDByWarpName(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""))));
+                    } catch (SQLException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (catMats.contains(clickedType) || skullMats.contains(clickedType)) {
+                System.out.println("Yup that's a category/skull material.");
+                event.setCancelled(true);
+                System.out.println("And so we've cancelled this click event");
+            } else if (clickedType.equals(Material.LAVA_BUCKET)) {
+                //If deleter owns this warp refund them, if deleter doesn't own this warp then refund the owner.
+                if (skullMats.contains(inventory.getItem(1).getType())) {
+                    //Deleter is deleting another player's warp.
+                    if (inventory.getItem(1).getType().equals(Material.CREEPER_HEAD)) {
+                        player.sendMessage(String.format("Well, we can't refund %s, because they haven't played on this server before.",
+                                inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", "")));
+                        System.out.println(String.format("Player '%s' has never played on the server. No refund was given.",
+                                inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", "")));
+                        // Although the player can't be refunded, their warp is still deletable.
+                        try {
+                            warpDeleting = db.getWarpByName(inventory.getItem(2).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
+                            db.deleteWarp(warpDeleting);
+                            player.closeInventory();
+                            player.sendMessage(warpDeleting.getDeletionMessage(warpDeleting.getName()));
+                        } catch (SQLException | ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        //Player has played before so we can delete the warp and refund them.
+                        try {
+                            warpDeleting = db.getWarpByName(inventory.getItem(2).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
+                            db.deleteWarp(warpDeleting);
+                            SkullMeta skullMeta = (SkullMeta) inventory.getItem(1).getItemMeta();
+                            OfflinePlayer refundee = skullMeta.getOwningPlayer();
+                            double balToDate = MyWarpsGUI.getEconomy().getBalance(refundee);
+                            MyWarpsGUI.getEconomy().depositPlayer(refundee, 500);
+                            player.closeInventory();
+                            player.sendMessage(warpDeleting.getDeletionMessage(warpDeleting.getName()));
+                            player.sendMessage(String.format("%s had a balance of %f. Balance after refund: %f", refundee.getName(), balToDate, MyWarpsGUI.getEconomy().getBalance(refundee)));
+                        } catch (SQLException | ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                } else {
+                    //Deleter is deleting their own warp. Refund player $500 if the warp is successfully deleted (from both db and the yaml file in essentials).
+                    try {
+                        warpDeleting = db.getWarpByName(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
+                        db.deleteWarp(warpDeleting);
+                        double balToDate = MyWarpsGUI.getEconomy().getBalance(player);
+                        MyWarpsGUI.getEconomy().depositPlayer(player, 500);
+                        player.closeInventory();
+                        player.sendMessage(warpDeleting.getDeletionMessage());
+                        player.sendMessage(String.format("You had a balance of %f. Balance after the refund: %f", balToDate, MyWarpsGUI.getEconomy().getBalance(player)));
+                    } catch (SQLException | ClassNotFoundException | IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

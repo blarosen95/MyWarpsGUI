@@ -5,6 +5,7 @@ import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.CreateEssentialsWarpFile;
 import com.github.blarosen95.mywarpsgui.Util.MyWarpsParser;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -127,6 +128,7 @@ public class SQLiteDatabase {
 
         if (warpExists) {
             String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
+            System.out.println(fileLocation);
             // TODO: 10/8/2018 does this file deletion work properly?
             Files.deleteIfExists(Paths.get(fileLocation));
             PreparedStatement prep = con.prepareStatement("DELETE FROM warps WHERE warp_name=? AND creator_uuid=?");
@@ -238,7 +240,7 @@ public class SQLiteDatabase {
      * @throws SQLException           throws SQLExceptions
      * @throws ClassNotFoundException throws ClassNotFoundExceptions
      */
-    public ResultSet getWarpsByPlayer(Player player) throws SQLException, ClassNotFoundException {
+    public ResultSet getWarpsByPlayer(OfflinePlayer player) throws SQLException, ClassNotFoundException {
         if (con == null) {
             getConnection();
         }
@@ -261,5 +263,36 @@ public class SQLiteDatabase {
         }
 
         return heads;
+    }
+
+    public Warp getWarpByName(String warpName) throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+        PreparedStatement psQuery = con.prepareStatement("SELECT warp_name, creator_uuid, creator_name, warp_category, essentials_warp_file FROM warps WHERE warp_name=?");
+        psQuery.setString(1, warpName);
+        ResultSet warpSet = psQuery.executeQuery();
+        if (warpSet.next()) {
+            return new Warp(warpSet.getString(1), warpSet.getString(2), warpSet.getString(3), warpSet.getString(4), warpSet.getString(5));
+        } else {
+            System.out.println("We have an issue in getWarpByName");
+            return null;
+        }
+    }
+
+    public String getUUIDByWarpName(String warpName) throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+
+        PreparedStatement psQuery = con.prepareStatement("SELECT creator_uuid FROM warps WHERE warp_name=?");
+        psQuery.setString(1, warpName);
+        ResultSet uuidSet = psQuery.executeQuery();
+        if (uuidSet.next()) {
+            return uuidSet.getString(1);
+        } else {
+            System.out.println("We have a problem in getUUIDByWarpName!");
+            return null;
+        }
     }
 }

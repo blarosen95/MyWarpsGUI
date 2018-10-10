@@ -1,6 +1,7 @@
 package com.github.blarosen95.mywarpsgui.Data;
 
 import com.github.blarosen95.mywarpsgui.Util.UUIDToName;
+import org.bukkit.entity.Player;
 
 public class Warp {
     private UUIDToName toName = new UUIDToName();
@@ -62,5 +63,14 @@ public class Warp {
 
     public String getWarpAsString() {
         return String.format("%s: by %s (aka %s). Category is: %s, file named %s", name, creatorUUID, creatorName, category, essentialsFile);
+    }
+
+    public String getDeletionMessage() {
+        return String.format("Your %s Warp, '%s', was successfully deleted.", category, name);
+    }
+
+    public String getDeletionMessage(String refundeeName) {
+        String esse = String.format("%s' %s Warp, '%s', was successfully deleted.", refundeeName, category, name);
+        return refundeeName.endsWith("s") ? esse : String.format("%s's %s Warp, %s, was successfully deleted.", refundeeName, category, name);
     }
 }
