@@ -21,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class GUIListener implements Listener {
@@ -29,7 +30,7 @@ public class GUIListener implements Listener {
 
     private ListPage listPage = new ListPage();
 
-    private ListPagesGUI listPagesGUI = new ListPagesGUI();
+    private ListPagesGUI listPagesGUI = new ListPagesGUI(); // TODO: 10/10/2018 If issues occur when two or more players open a listPagesGUI at the same time, this can't be instanced.
     private MainGUI mainGUI = new MainGUI();
 
     public ArrayList<Inventory> pagesList = new ArrayList<>();
@@ -39,6 +40,11 @@ public class GUIListener implements Listener {
     private ArrayList<Inventory> pagesListFarm = new ArrayList<>();
     private ArrayList<Inventory> pagesListShop = new ArrayList<>();
     private ArrayList<Inventory> pagesListOther = new ArrayList<>();
+
+    //    private ArrayList<Inventory> pagesListDeleteOwned = new ArrayList<>();
+    private HashMap<String, ArrayList<Inventory>> pagesListDeleteOwned = new HashMap<>();
+    //    private ArrayList<Inventory> pagesListDeleteOthers = new ArrayList<>();
+    private HashMap<String, ArrayList<Inventory>> pagesListDeleteHeads = new HashMap<>();
 
     public GUIListener() {
     }
@@ -262,15 +268,45 @@ public class GUIListener implements Listener {
         } else if (inventory.getName().equals("Delete Warps") && event.getSlotType() != SlotType.OUTSIDE) {
             ItemStack clicked = event.getCurrentItem();
             Material clickedType = clicked.getType();
+            ResultSet resultSet;
+            ArrayList<Warp> warps = new ArrayList<>();
+            ArrayList<ItemStack> warpItems;
+            ArrayList<ItemStack> heads;
 
             if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
                 MainGUI.openGUI(player);
             } else if (clickedType.equals(Material.LAVA_BUCKET)) {
-                switch (clicked.getAmount()) {
-                    case 1:
-                        // TODO: 10/9/2018 Open submenu for deleting this player's warps.
-                    case 2:
-                        // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
+                try {
+                    switch (clicked.getAmount()) {
+                        case 1:
+                            // TODO: 10/9/2018 Open submenu for deleting this player's warps.
+                            resultSet = db.getWarpsByPlayer(player);
+                            warps = convertResultSet(resultSet);
+
+                            warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, true)).collect(Collectors.toCollection(ArrayList::new));
+                            ListItemPagination listItemPagination = new ListItemPagination(warpItems);
+                            listPage.createPages(warpItems, listItemPagination, "Delete Page");
+                            this.pagesListDeleteOwned.put(player.getUniqueId().toString(), listPage.getListPagesList());
+                            listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()));
+
+                        case 2:
+                            // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
+                            if (player.hasPermission("essentials.delwarp")) {
+                                // TODO: 10/9/2018 I'd like to have this open up a SkullItem Menu like in ArtisticMaps.
+                                System.out.println("2");
+                                heads = db.getHeads();
+                                ListItemPagination listItemPaginationHeads = new ListItemPagination(heads);
+                                listPage.createPages(heads, listItemPaginationHeads, "Warp Owners Page");
+                                this.pagesListDeleteHeads.put(player.getUniqueId().toString(), listPage.getListPagesList());
+                                listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()));
+                            } else {
+                                player.sendMessage("You do not have permission to delete warps created by other players.");
+                                WarpDeleteGUI.openGUI(player);
+                            }
+                    }
+                } catch (SQLException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    System.out.println(String.format("Caused by player %s", player.getName()));
                 }
             }
         } else if (inventory.getName().equals("Warp Category") && event.getSlotType() != SlotType.OUTSIDE) {
@@ -320,6 +356,25 @@ public class GUIListener implements Listener {
                     player.sendMessage("You do not have enough money to make a warp.");
                 }
             }
+        } else if (inventory.getName().equals("Warp Owners Page") && event.getSlotType() != SlotType.OUTSIDE) {
+            ItemStack clicked = event.getCurrentItem();
+            Material clickedType = clicked.getType();
+
+            if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.DARK_RED + "" + "←" + ChatColor.RESET)) {
+                WarpDeleteGUI.openGUI(player);
+            } else if (clickedType.equals(Material.PLAYER_HEAD)) {
+                // TODO: 10/10/2018 Open up a Delete Page for that player.
+            } else if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA) && clicked.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "" + "→" + ChatColor.RESET)) {
+                // TODO: 10/10/2018 pull next page.
+                listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(inventory.getSize() - 1).getAmount());
+            } else if (clickedType.equals(Material.BARRIER)) {
+                // TODO: 10/10/2018 go back one page.
+                if (inventory.getItem(0).getAmount() == 1) {
+                    listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 1);
+                } else {
+                    listPagesGUI.openGUI(player, pagesListDeleteHeads.get(player.getUniqueId().toString()), inventory.getItem(0).getAmount() - 2);
+                }
+            }
         }
         //If it's not our main menu:
         else {
@@ -335,6 +390,8 @@ public class GUIListener implements Listener {
         //If the inventory is a list page (might have uses for this EventHandler for other menus eventually)
         if (inventory.getName().contains("List Page")) {
             //Reset the pages so a new list can be created in the same instance.
+            this.listPage = new ListPage();
+        } else if (inventory.getName().equals("Warp Owners Page") || inventory.getName().equals("Delete Page")) {
             this.listPage = new ListPage();
         }
     }

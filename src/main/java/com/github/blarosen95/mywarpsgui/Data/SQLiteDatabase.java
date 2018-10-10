@@ -1,10 +1,12 @@
 package com.github.blarosen95.mywarpsgui.Data;
 
+import com.github.blarosen95.mywarpsgui.Items.SkullFactory;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.CreateEssentialsWarpFile;
 import com.github.blarosen95.mywarpsgui.Util.MyWarpsParser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,12 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class SQLiteDatabase {
     private static Connection con;
     private static boolean hasData = false;
     private static File dataFolder = MyWarpsGUI.getInstance().getDataFolder();
     private static String warpsDBFile = dataFolder.getAbsolutePath() + File.separator + "MyWarpsGUI.db";
+    private SkullFactory skullFactory = new SkullFactory();
 
     private static File essentialsWarpsFolder = Bukkit.getServer().getPluginManager().getPlugin("Essentials").getDataFolder();
 
@@ -174,10 +178,11 @@ public class SQLiteDatabase {
 
     /**
      * Used to both add a warp to the Database as well as to create the Essentials/Warps/ .yml file for the warp.
-     * @param warp the Warp object to use.
+     *
+     * @param warp   the Warp object to use.
      * @param player the Player creating the Warp.
      * @return a String containing the reason why the Warp couldn't be created, null if it was created successfully.
-     * @throws SQLException throws SQLExceptions
+     * @throws SQLException           throws SQLExceptions
      * @throws ClassNotFoundException throws ClassNotFoundExceptions
      */
     public String addWarp(Warp warp, Player player) throws SQLException, ClassNotFoundException {
@@ -225,4 +230,36 @@ public class SQLiteDatabase {
         return "A warp with that name already exists. You need to pick a new name.";
     }
 
+    /**
+     * Gets all warps created by a given player
+     *
+     * @param player Player to search for.
+     * @return A ResultSet containing the warps owned by the player provided.
+     * @throws SQLException           throws SQLExceptions
+     * @throws ClassNotFoundException throws ClassNotFoundExceptions
+     */
+    public ResultSet getWarpsByPlayer(Player player) throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+
+        PreparedStatement psQuery = con.prepareStatement("SELECT * FROM warps WHERE creator_uuid=?");
+        psQuery.setString(1, player.getUniqueId().toString());
+        return psQuery.executeQuery();
+    }
+
+    public ArrayList<ItemStack> getHeads() throws SQLException, ClassNotFoundException {
+        if (con == null) {
+            getConnection();
+        }
+        ArrayList<ItemStack> heads = new ArrayList<>();
+        Statement statement = con.createStatement();
+        ResultSet rs = statement.executeQuery("SELECT DISTINCT creator_uuid, creator_name FROM warps;");
+
+        while (rs.next()) {
+            heads.add(skullFactory.getHead(Bukkit.getOfflinePlayer(UUID.fromString(rs.getString(1))), rs.getString(2)));
+        }
+
+        return heads;
+    }
 }
