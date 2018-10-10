@@ -9,7 +9,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 public class SkullFactory {
     public ItemStack getHead(OfflinePlayer player, String name) {
         if (!player.hasPlayedBefore()) {
-            System.out.println(player.getUniqueId() + " has not played before!");
             ItemStack domeUnknown = new ItemStack(Material.CREEPER_HEAD, 1);
 
             ItemMeta domeUnknownItemMeta = domeUnknown.getItemMeta();
@@ -22,8 +21,6 @@ public class SkullFactory {
         SkullMeta domeMeta = (SkullMeta) dome.getItemMeta();
         domeMeta.setOwningPlayer(player);
         domeMeta.setDisplayName(player.getName());
-
-        System.out.println(String.format("%s: %s (%s)", domeMeta.hasOwner(), domeMeta.getOwningPlayer().getUniqueId(), domeMeta.getOwningPlayer().getName()));
 
         dome.setItemMeta(domeMeta);
         return dome;

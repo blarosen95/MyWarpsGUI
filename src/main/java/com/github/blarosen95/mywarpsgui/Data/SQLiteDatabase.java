@@ -127,10 +127,18 @@ public class SQLiteDatabase {
         }
 
         if (warpExists) {
-            String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
+// TODO: 10/10/2018 delete that shit right there.
+            /*            String fileLocation = locateEssentialsWarpFile(warp.getEssentialsFile());
             System.out.println(fileLocation);
             // TODO: 10/8/2018 does this file deletion work properly?
-            Files.deleteIfExists(Paths.get(fileLocation));
+            Files.deleteIfExists(Paths.get(fileLocation)); */
+
+            try {
+                MyWarpsGUI.getEssentials().getWarps().removeWarp(warp.getName());
+            } catch (Exception e) {
+                e.printStackTrace(); // TODO: 10/10/2018 replace this line (and the related line in addWarp) with a player.sendMessage()
+            }
+
             PreparedStatement prep = con.prepareStatement("DELETE FROM warps WHERE warp_name=? AND creator_uuid=?");
             prep.setString(1, warp.getName());
             prep.setString(2, warp.getCreatorUUID());
@@ -209,15 +217,20 @@ public class SQLiteDatabase {
                 return "A warp with that file name already exists, please make a post in #support on the Discord Server. Be sure to include the name you tried to use for the warp!";
                 // TODO: 10/8/2018 hopefully this is only true when the warp is in the Database already. This is just to be extra safe.
             }
-            //Create the file
-            CreateEssentialsWarpFile createEssentialsWarpFile = new CreateEssentialsWarpFile(warp, player);
             try {
-                createEssentialsWarpFile.createFileContents();
-            } catch (IOException e) {
+                MyWarpsGUI.getEssentials().getWarps().setWarp(warp.getName().toLowerCase(), player.getLocation());
+            } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println(String.format("Caused by player '%s' while creating the warp's %s", player.getName(), warp.getEssentialsFile()));
-                return "An internal error occurred while attempting to create your warp. Your balance has not been charged for this.";
             }
+            //Create the file
+/*todo            CreateEssentialsWarpFile createEssentialsWarpFile = new CreateEssentialsWarpFile(warp, player);
+  todo            try {
+  todo              createEssentialsWarpFile.createFileContents();
+  todo          } catch (IOException e) {
+  todo              e.printStackTrace();
+  todo              System.out.println(String.format("Caused by player '%s' while creating the warp's %s", player.getName(), warp.getEssentialsFile()));
+  todo              return "An internal error occurred while attempting to create your warp. Your balance has not been charged for this.";
+  todo          } */
 
             //Add the warp to our database
             PreparedStatement preparedStatement = con.prepareStatement("INSERT INTO warps (warp_name, warp_category, creator_uuid, creator_name, essentials_warp_file) VALUES (?,?,?,?,?);");

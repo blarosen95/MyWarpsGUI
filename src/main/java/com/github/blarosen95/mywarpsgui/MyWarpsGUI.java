@@ -1,5 +1,6 @@
 package com.github.blarosen95.mywarpsgui;
 
+import com.earth2me.essentials.Essentials;
 import com.github.blarosen95.mywarpsgui.Data.Config;
 import com.github.blarosen95.mywarpsgui.Data.SQLiteDatabase;
 import com.github.blarosen95.mywarpsgui.Data.Warp;
@@ -24,6 +25,7 @@ public final class MyWarpsGUI extends JavaPlugin {
     private static SQLiteDatabase sqLiteDatabase;
     private static UUIDToName uuidToName;
     private static Economy economy;
+    private static Essentials essentials;
 
     private MainGUI mainGUI;
 
@@ -32,6 +34,11 @@ public final class MyWarpsGUI extends JavaPlugin {
         // Plugin startup logic
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] Disabled due to missing dependency: Vault!", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        if (!setupEssentials()) {
+            getLogger().severe(String.format("[%s] Disabled due to missing dependency: Essentials!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -89,4 +96,13 @@ public final class MyWarpsGUI extends JavaPlugin {
         return economy;
     }
 
+    private boolean setupEssentials() {
+        if (getServer().getPluginManager().getPlugin("Essentials") == null) return false;
+        essentials = (Essentials) getServer().getPluginManager().getPlugin("Essentials");
+        return true;
+    }
+
+    public static Essentials getEssentials() {
+        return essentials;
+    }
 }

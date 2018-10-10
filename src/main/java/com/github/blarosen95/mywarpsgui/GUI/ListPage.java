@@ -58,9 +58,9 @@ public class ListPage {
                         //Here's our extra page creation:
                         listPageGUI.setItem(0, warpListItem.makeButtonItem(Material.BARRIER, "←", page + 1, true));
                         Inventory finalListPageGUI4 = listPageGUI;
-                        IntStream.range(1, warpItems.size()).forEach(slot -> finalListPageGUI4.setItem(slot, warpItems.get(slot - 1))); // TODO: 10/5/2018 if extra pages look off, this might be the reason.
+                        IntStream.range(1, warpItems.size() + 1).forEach(slot -> finalListPageGUI4.setItem(slot, warpItems.get(slot - 1))); // TODO: 10/5/2018 if extra pages look off, this might be the reason.
                         Inventory finalListPageGUI5 = listPageGUI;
-                        IntStream.range(warpItems.size(), 27).forEach(slot -> finalListPageGUI5.setItem(slot, new ItemStack(Material.AIR, 1)));
+                        IntStream.range(warpItems.size() + 1, 27).forEach(slot -> finalListPageGUI5.setItem(slot, new ItemStack(Material.AIR, 1)));
                         // TODO: 10/6/2018 the following line was missing and I believe I had simply forgotten to write it:
                         listPagesList.add(listPageGUI);
                         listPageGUI = getBlankPage(pageName);
@@ -98,8 +98,9 @@ public class ListPage {
         } else {
             listPageGUI.setItem(0, warpListItem.makeButtonItem(Material.MAGENTA_GLAZED_TERRACOTTA, "←", 1, true));
             Inventory finalListPageGUI = listPageGUI;
-            IntStream.range(1, warpItems.size()).forEach(slot -> finalListPageGUI.setItem(slot, warpItems.get(slot - 1)));
-            IntStream.range(warpItems.size(), 27).forEach(slot -> finalListPageGUI.setItem(slot, new ItemStack(Material.AIR, 1)));
+            IntStream.range(1, warpItems.size() + 1).forEach(slot -> finalListPageGUI.setItem(slot, warpItems.get(slot - 1)));
+
+            IntStream.range(warpItems.size() + 1, 27).forEach(slot -> finalListPageGUI.setItem(slot, new ItemStack(Material.AIR, 1)));
 
             //The previous line removes the back button on lists with no warps in them, we need to put it back in the size is 0.
             if (warpItems.size() == 0) {

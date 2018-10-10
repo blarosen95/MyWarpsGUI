@@ -3,11 +3,13 @@ package com.github.blarosen95.mywarpsgui.Listeners;
 import com.github.blarosen95.mywarpsgui.Data.SQLiteDatabase;
 import com.github.blarosen95.mywarpsgui.Data.Warp;
 import com.github.blarosen95.mywarpsgui.GUI.*;
+import com.github.blarosen95.mywarpsgui.Items.SkullFactory;
 import com.github.blarosen95.mywarpsgui.Items.WarpListItem;
 import com.github.blarosen95.mywarpsgui.Materials.ButtonMaterials;
 import com.github.blarosen95.mywarpsgui.MyWarpsGUI;
 import com.github.blarosen95.mywarpsgui.Util.ListItemPagination;
 import net.wesjd.anvilgui.AnvilGUI;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -27,11 +29,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GUIListener implements Listener {
     private SQLiteDatabase db = MyWarpsGUI.getSqLiteDatabase();
     private WarpListItem warpListItem = new WarpListItem();
+    private SkullFactory skullFactory = new SkullFactory();
 
     private ListPage listPage = new ListPage();
 
@@ -236,18 +240,15 @@ public class GUIListener implements Listener {
             } else if (clickedType.equals(Material.NAME_TAG)) {
                 new AnvilGUI(MyWarpsGUI.getInstance(), player, "Name?", (playerBi, reply) -> {
                     Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply + ".yml");
-                    System.out.println(tempWarp.getWarpAsString());
                     ConfirmCreateGUI.openGUI(player, tempWarp);
                     return "test";
                 });
             } else if (clickedType.equals(Material.ACACIA_STAIRS)) {
                 switch (clicked.getAmount()) {
                     case 1:
-                        System.out.println(player.getName());
                         // TODO: 10/9/2018 Get input for Warp's Name.
                         new AnvilGUI(MyWarpsGUI.getInstance(), player, "Warp's Name", (playerBi, reply) -> {
                             Warp tempWarp = new Warp(reply, player.getUniqueId().toString(), player.getName(), inventory.getItem(8).getItemMeta().getDisplayName(), reply.toLowerCase() + ".yml");
-                            System.out.println(tempWarp.getWarpAsString());
                             // TODO: 10/9/2018 Charge the player $1,000 (if they don't have it, exit menu and inform them why they cant make the warp)
                             // TODO: 10/9/2018 Try to add the warp to the database, if the addWarp call returns any issues, refund the player $1,000 and explain why the warp couldn't be created.
                             return null;
@@ -289,8 +290,8 @@ public class GUIListener implements Listener {
                             // TODO: 10/9/2018 Open submenu for deleting this player's warps.
                             resultSet = db.getWarpsByPlayer(player);
                             warps = convertResultSet(resultSet);
-
                             warpItems = warps.stream().map(warp -> warpListItem.makeListItem(warp, true)).collect(Collectors.toCollection(ArrayList::new));
+
                             ListItemPagination listItemPagination = new ListItemPagination(warpItems);
                             listPage.createPages(warpItems, listItemPagination, "Delete Page");
                             this.pagesListDeleteOwned.put(player.getUniqueId().toString(), listPage.getListPagesList());
@@ -301,7 +302,6 @@ public class GUIListener implements Listener {
                             // TODO: 10/9/2018 If the player has the right perms, open submenu for deleting other players' warps. Otherwise exit the menus and send them a warning.
                             if (player.hasPermission("essentials.delwarp")) {
                                 // TODO: 10/9/2018 I'd like to have this open up a SkullItem Menu like in ArtisticMaps.
-                                System.out.println("2");
                                 heads = db.getHeads();
                                 ListItemPagination listItemPaginationHeads = new ListItemPagination(heads);
                                 listPage.createPages(heads, listItemPaginationHeads, "Warp Owners Page");
@@ -419,7 +419,12 @@ public class GUIListener implements Listener {
             } else if (clickedType.equals(Material.SIGN)) {
                 //Using the Sign's name, send the warp to be deleted to a ConfirmDeleteGUI menu (where they can: go back, review the warp, and confirm the deletion and receive $500.)
                 try {
-                    ConfirmDeleteGUI.openGUI(player, db.getWarpByName(clicked.getItemMeta().getDisplayName().replaceAll("§\\w", "")));
+                    if (clicked.getItemMeta().getDisplayName().replaceAll("§\\w", "").equals(player.getDisplayName().replaceAll("§\\w", ""))) {
+                        ConfirmDeleteGUI.openGUI(player, db.getWarpByName(clicked.getItemMeta().getDisplayName().replaceAll("§\\w", "")));
+                    } else {
+                        OfflinePlayer justADood = Bukkit.getOfflinePlayer(UUID.fromString(db.getUUIDByWarpName(clicked.getItemMeta().getDisplayName().replaceAll("§\\w", ""))));
+                        ConfirmDeleteGUI.openGUI(player, db.getWarpByName(clicked.getItemMeta().getDisplayName().replaceAll("§\\w", "")), skullFactory.getHead(justADood, justADood.getName()));
+                    }
                 } catch (SQLException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -446,14 +451,13 @@ public class GUIListener implements Listener {
             Warp warpDeleting;
 
             if (clickedType.equals(Material.MAGENTA_GLAZED_TERRACOTTA)) {
-                if (inventory.getItem(4).getType() == Material.AIR) {
+                if (inventory.getItem(4) == null || inventory.getItem(4).getType().equals(Material.AIR)) {
                     //Then open this player's Delete Warps List.
                     listPagesGUI.openGUI(player, pagesListDeleteOwned.get(player.getUniqueId().toString()));
                 } else {
                     //Then open this warp owner's warp delete list.
-                    System.out.println(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""));
                     try {
-                        listPagesGUI.openGUI(player, pagesListDeleteOwned.get(db.getUUIDByWarpName(inventory.getItem(1).getItemMeta().getDisplayName().replaceAll("§\\w", ""))));
+                        listPagesGUI.openGUI(player, pagesListDeleteOwned.get(db.getUUIDByWarpName(inventory.getItem(2).getItemMeta().getDisplayName().replaceAll("§\\w", ""))));
                     } catch (SQLException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
